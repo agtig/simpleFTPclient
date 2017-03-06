@@ -70,70 +70,86 @@ int main(int argc, char *argv[])
     if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
         error("ERROR connecting");
     
-    // print welcome message
-    n = recv(sockfd,buffer,sizeof(buffer),0);   // receive welcome message from server
-                                                // save in buffer n receives a line number
-    buffer[n]='\0';                             // add \0 to the end of buffer
-    printf("%s\n",buffer);                      // print buffer containing received message
-    
-    /** automated login START */
-    bzero(buffer,256);                          // clear buffer
-    printf("Sending 'hello' to server...\n");
-    strcpy(buffer, "hello\r\n");                // save 'hello' in buffer
-    send(sockfd, buffer, strlen(buffer), 0);    // send buffer through socket
+       
+    if (portno != 21) {
+        printf("Port number is not 21\nEntering listening mode...\n");
+        n = recv(sockfd,buffer,sizeof(buffer),0);   // receive file from server
+                                                    // save in buffer n receives a line number
+        buffer[n]='\0';                             // add \0 to the end of buffer
+        printf("%s\n",buffer);                      // print buffer containing received message
+        if (sizeof(buffer) >= 1023) {
+            FILE * fp;
+            fp = fopen("downloadedFile.txt", "w");
+            fprintf(fp, "%s\n",buffer);                      // print buffer containing received message
+            fclose(fp);
+            printf("\n\nReceived file saved as \"downloadedFile.txt\"\n");
+        }
+    } else {
+        // print welcome message
+        n = recv(sockfd,buffer,sizeof(buffer),0);   // receive welcome message from server
+                                                    // save in buffer n receives a line number
+        buffer[n]='\0';                             // add \0 to the end of buffer
+        printf("%s\n",buffer);                      // print buffer containing received message
 
-    bzero(buffer,256);                          // clear buffer
-    n = recv(sockfd,buffer,sizeof(buffer),0);   // receive server response
-    buffer[n]='\0';
-    printf("%s\n",buffer);                      // print buffer
-    
-    bzero(buffer,256);                          // clear buffer
-    printf("Logging in to server using the entered credentials...\n");
-    strcpy(buffer, "USER ");                    // assemble user login string
-    strcat(buffer, user);                       // add the entered username
-    strcat(buffer, "\r\n");                     // add return and new line
-    printf("using USER %s\n", user);
-    send(sockfd, buffer, strlen(buffer), 0);    // send buffer through socket
+        /** automated login START */
+        bzero(buffer,256);                          // clear buffer
+        printf("Sending 'hello' to server...\n");
+        strcpy(buffer, "hello\r\n");                // save 'hello' in buffer
+        send(sockfd, buffer, strlen(buffer), 0);    // send buffer through socket
 
-    bzero(buffer,256);                          // cleat buffer
-    n = recv(sockfd,buffer,sizeof(buffer),0);   // receive server response
-    buffer[n]='\0';
-    printf("%s",buffer);                        // print buffer
-    
-    bzero(buffer,256);                          // clear buffer
-    strcpy(buffer, "PASS ");                    // assemble password login string
-    strcat(buffer, passwd);                     // add the entered password
-    strcat(buffer, "\r\n");                     // add return and new line
-    printf("and PASS %s\n", passwd);
-    send(sockfd, buffer, strlen(buffer), 0);    // send buffer through socket
+        bzero(buffer,256);                          // clear buffer
+        n = recv(sockfd,buffer,sizeof(buffer),0);   // receive server response
+        buffer[n]='\0';
+        printf("%s\n",buffer);                      // print buffer
 
-    bzero(buffer,256);                          // clear buffer
-    n = recv(sockfd,buffer,sizeof(buffer),0);   // receive server response
-    buffer[n]='\0';
-    printf("%s\n",buffer);                      // print buffer
-    /** automated login END */
-    
-    do {
-        printf("Please enter the message: ");
-        bzero(buffer,256);                      // reset buffer
-        fgets(buffer,255,stdin);                // save entered input in buffer
-        strcpy(lastInput, buffer);              // copy entered input to lastInput (used to end the while loop)
-    
-        n = write(sockfd,buffer,strlen(buffer));// send the entered command through the socket
-        // check for errors
-        if (n < 0) 
-             error("ERROR writing to socket");
-        
-        bzero(buffer,256);                      // reset buffer
-        n = read(sockfd,buffer,255);            // read server response
-        // check for errors
-        if (n < 0) 
-             error("ERROR reading from socket");
+        bzero(buffer,256);                          // clear buffer
+        printf("Logging in to server using the entered credentials...\n");
+        strcpy(buffer, "USER ");                    // assemble user login string
+        strcat(buffer, user);                       // add the entered username
+        strcat(buffer, "\r\n");                     // add return and new line
+        printf("using USER %s\n", user);
+        send(sockfd, buffer, strlen(buffer), 0);    // send buffer through socket
 
-        printf("%s\n",buffer);                  // print buffer
-    
-    // while loop needs the quit command 3 times before it quits. Don't know why yet
-    } while(strncmp(lastInput, "quit", 4) != 0 || strncmp(lastInput, "QUIT", 4) != 0);
+        bzero(buffer,256);                          // cleat buffer
+        n = recv(sockfd,buffer,sizeof(buffer),0);   // receive server response
+        buffer[n]='\0';
+        printf("%s",buffer);                        // print buffer
+
+        bzero(buffer,256);                          // clear buffer
+        strcpy(buffer, "PASS ");                    // assemble password login string
+        strcat(buffer, passwd);                     // add the entered password
+        strcat(buffer, "\r\n");                     // add return and new line
+        printf("and PASS %s\n", passwd);
+        send(sockfd, buffer, strlen(buffer), 0);    // send buffer through socket
+
+        bzero(buffer,256);                          // clear buffer
+        n = recv(sockfd,buffer,sizeof(buffer),0);   // receive server response
+        buffer[n]='\0';
+        printf("%s\n",buffer);                      // print buffer
+        /** automated login END */
+
+        do {
+            printf("Please enter the message: ");
+            bzero(buffer,256);                      // reset buffer
+            fgets(buffer,255,stdin);                // save entered input in buffer
+            strcpy(lastInput, buffer);              // copy entered input to lastInput (used to end the while loop)
+
+            n = write(sockfd,buffer,strlen(buffer));// send the entered command through the socket
+            // check for errors
+            if (n < 0) 
+                 error("ERROR writing to socket");
+
+            bzero(buffer,256);                      // reset buffer
+            n = read(sockfd,buffer,255);            // read server response
+            // check for errors
+            if (n < 0) 
+                 error("ERROR reading from socket");
+
+            printf("%s\n",buffer);                  // print buffer
+
+        // while loop needs the quit command 3 times before it quits. Don't know why yet
+        } while(strncmp(lastInput, "quit", 4) != 0 || strncmp(lastInput, "QUIT", 4) != 0);
+    }    
     close(sockfd);                              // close socket
     return 0;                                   // close program
 }
